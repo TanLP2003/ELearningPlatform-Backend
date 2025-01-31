@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: userserviceapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: userserviceapi
+  template:
+    metadata:
+      labels:
+        app: userserviceapi
+    spec:
+      containers:
+        - name: userserviceapi
+          image: tanlp/userserviceapi
+          # resources:
+          #   limits:
+          #     memory: "128Mi"
+          #     cpu: "500m"
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Development
+            - name: ASPNETCORE_HTTP_PORTS
+              value: "8080"
+            - name: ConnectionStrings__Postgres
+              value: "Host=elearningdb;Database=UserServiceDb;Username=postgres;Password=postgres"
+            - name: Minio__Endpoint
+              value: "miniodb:9001"
+            - name: Minio__accessKey
+              value: "minio_admin"
+            - name: Minio__secretKey
+              value: "minio_password"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: userserviceapi
+spec:
+  selector:
+    app: userserviceapi
+  ports:
+    - port: 8080
+      targetPort: 8080

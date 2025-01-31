@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paymentserviceapi
+spec:
+  selector:
+    matchLabels:
+      app: paymentserviceapi
+  template:
+    metadata:
+      labels:
+        app: paymentserviceapi
+    spec:
+      containers:
+        - name: paymentserviceapi
+          image: tanlp/paymentserviceapi
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "200m"
+            limits:
+              memory: "256Mi"
+              cpu: "400m"
+          ports:
+            - containerPort: 8080
+            - containerPort: 8082
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Development
+            - name: ASPNETCORE_HTTP_PORTS
+              value: "8080"
+            - name: VNPay__ReturnUrl
+              value: "http://localhost:30000/payment/vnpay/callback"
+            - name: VNPay__PaymentSuccessfulRedirect
+              value: "http://localhost:31000/payment/success"
+            - name: VNPay__PaymentFailedRedirect
+              value: "http://localhost:31000/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paymentserviceapi
+spec:
+  selector:
+    app: paymentserviceapi
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+    - name: grpc
+      port: 8082
+      targetPort: 8082

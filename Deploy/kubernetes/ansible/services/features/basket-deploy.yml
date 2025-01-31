@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: basketapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: basketapi
+  template:
+    metadata:
+      labels:
+        app: basketapi
+    spec:
+      containers:
+        - name: basketapi
+          image: tanlp/basketapi
+          # resources:
+          #   limits:
+          #     memory: "128Mi"
+          #     cpu: "500m"
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Development
+            - name: ASPNETCORE_HTTP_PORTS
+              value: "8080"
+            - name: ConnectionStrings__Postgres
+              value: "Host=elearningdb;Database=CartDb;Username=postgres;Password=postgres"
+            - name: GrpcSettings__CourseUri
+              value: "http://coursemanagerapi:8082"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: basketapi
+spec:
+  selector:
+    app: basketapi
+  ports:
+    - port: 8080
+      targetPort: 8080

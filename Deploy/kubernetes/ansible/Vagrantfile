@@ -1,0 +1,42 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.i
+
+NUM_MASTER_NODE = 1
+NUM_WORKER_NODE = 1
+IP_NW = "192.168.30."
+MASTER_IP_START = 1
+NODE_IP_START = 2
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/focal64"
+  config.vm.box_check_update = false
+
+  (1..NUM_MASTER_NODE).each do |i|
+        config.vm.define "masternode" do |node|
+            node.vm.provider "virtualbox" do |vb|
+                vb.name = "masternode"
+                vb.memory = 2048
+            end
+            node.vm.hostname = "masternode"
+            node.vm.network :private_network, ip: IP_NW + "#{MASTER_IP_START + i}"
+            node.vm.provision "shell", path: "provision.sh"
+        end
+  end
+
+  (1..NUM_WORKER_NODE).each do |i|
+        config.vm.define "workernode0#{i}" do |node|
+            node.vm.provider "virtualbox" do |vb|
+                vb.name = "workernode0#{i}"
+                vb.memory = 2048
+            end
+            node.vm.hostname = "workernode0#{i}"
+            node.vm.network :private_network, ip: IP_NW + "#{NODE_IP_START + i}"
+            node.vm.provision "shell", path: "provision.sh"
+        end
+  end
+end

@@ -1,0 +1,273 @@
+version: '3.4'
+
+services:
+  elearningdb:
+    container_name: elearningdb
+    ports:
+      - "5450:5432"
+    restart: always
+    volumes:
+      - postgres_elearning:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  minio:
+    container_name: miniodb
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minio_admin
+      - MINIO_ROOT_PASSWORD=minio_password
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+### API GATEWAY
+  apigateway:
+    container_name: apigateway
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - Security__SecretKey=123456789123456789123456789123456789
+    ports:
+      - "9090:8080"
+    depends_on:
+      - coursemanagerapi
+      - authapi
+      - videomanagerapi
+      - basketapi
+      - learningserviceapi
+      - wishlistapi
+      - videolibraryapi
+      - paymentserviceapi
+
+### COURSE MANAGER SERVICE
+  coursemanagerapi:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__Postgres=Host=elearningdb;Database=CourseManagerDb;Username=postgres;Password=postgres
+      - GrpcSettings__VideoManagerUri=http://videomanagerapi:8082
+      - GrpcSettings__LearningServiceUri=http://learningserviceapi:8082
+    ports:
+      - "3030:8080"
+      # - "3031:8081"
+      - "3031:8082"
+    container_name: coursemanagerapi
+    restart: always
+    depends_on:
+      - elearningdb
+
+### VIDEO MANAGER SERVICE
+  videomanagerapi:
+    container_name: videomanagerapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__Postgres=Host=elearningdb;Database=VideoManagerDb;Username=postgres;Password=postgres
+    ports:
+      - "4040:8080"
+      - "4042:8082"
+    restart: always
+    volumes:
+      - local_storage:/app/storage/
+    depends_on:
+      - elearningdb
+
+### BASKET SERVICE
+  basketapi:
+    container_name: basketapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__Postgres=Host=elearningdb;Database=CartDb;Username=postgres;Password=postgres
+      - MessageBroker__Host=amqp://e-learning-platform-mq:5672
+      - MessageBroker__Username=guest
+      - MessageBroker__Password=guest
+      - GrpcSettings__CourseUri=http://coursemanagerapi:8082
+      - GrpcSettings__PaymentServiceUri=http://paymentserviceapi:8082
+    ports:
+      - "5050:8080"
+    depends_on:
+      - elearningdb
+      - messagebroker
+    restart: always
+
+### MESSAGE BROKER
+  messagebroker:
+    container_name: messagebroker
+    hostname: e-learning-platform-mq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - messagebroker_vol:/var/lib/rabbitmq
+      - messagebroker_vol:/var/log/rabbitmq
+
+### ORDER SERVICE
+  # orderingapi:
+  #   container_name: orderingapi
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #     - ASPNETCORE_HTTP_PORTS=8080
+  #     - MessageBroker__Host=amqp://e-learning-platform-mq:5672
+  #     - MessageBroker__Username=guest
+  #     - MessageBroker__Password=guest
+  #     - ConnectionStrings__Postgres=Host=elearningdb;Database=OrderingDb;Username=postgres;Password=postgres
+  #   ports:
+  #     - "6060:8080"
+  #   depends_on:
+  #     - messagebroker
+  #     - elearningdb
+  #   restart: always
+
+### PAYMENT SERVICE
+  paymentserviceapi:
+    container_name: paymentserviceapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - VNPay__ReturnUrl=http://localhost:9090/payment/vnpay/callback
+      - VNPay__PaymentSuccessfulRedirect=http://localhost:3000/payment/success
+      - VNPay__PaymentFailedRedirect=http://localhost:3000/
+    ports:
+      - "10005:8080"
+      - "8082"
+    depends_on:
+      - messagebroker
+    restart: always
+        
+
+### LEARNING SERVICE
+  learningserviceapi:
+    container_name: learningserviceapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__Postgres=Host=elearningdb;Database=LearningServiceDb;Username=postgres;Password=postgres
+      - MessageBroker__Host=amqp://e-learning-platform-mq:5672
+      - MessageBroker__Username=guest
+      - MessageBroker__Password=guest
+      - GrpcSettings__CourseUri=http://coursemanagerapi:8082
+    ports:
+      - "10004:8080"
+      - "8082"
+    depends_on:
+      - elearningdb
+      - messagebroker
+    restart: always
+ 
+### WISH LIST SERVICE
+  wishlistapi:
+    container_name: wishlistapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__Postgres=Host=elearningdb;Database=WishlistDb;Username=postgres;Password=postgres
+      - MessageBroker__Host=amqp://e-learning-platform-mq:5672
+      - MessageBroker__Username=guest
+      - MessageBroker__Password=guest
+      - GrpcSettings__CourseUri=http://coursemanagerapi:8082
+    ports:
+      - "2020:8080"
+    depends_on:
+      - messagebroker
+      - elearningdb
+    restart: always
+
+### VIDEO LIBRARY SERVICE
+  videolibraryapi:
+    container_name: videolibraryapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__Postgres=Host=elearningdb;Database=VideoLibraryDb;Username=postgres;Password=postgres
+      - MessageBroker__Host=amqp://e-learning-platform-mq:5672
+      - MessageBroker__Username=guest
+      - MessageBroker__Password=guest
+    ports:
+      - "10000:8080"
+    depends_on:
+      - messagebroker
+      - elearningdb
+    restart: always
+
+  authapi:
+    container_name: authapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__Postgres=Host=elearningdb;Database=AuthDb;Username=postgres;Password=postgres
+      # - Auth__Google__RedirectUri="http://localhost:9999"
+    ports:
+      - "10001:8080"
+    depends_on:
+      - messagebroker
+      - elearningdb
+    restart: always
+
+  userserviceapi:
+    container_name: userserviceapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__Postgres=Host=elearningdb;Database=UserServiceDb;Username=postgres;Password=postgres
+    ports:
+      - "10002:8080"
+    depends_on:
+      - elearningdb
+    restart: always
+
+  searchserviceapi:
+    container_name: searchserviceapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__Postgres=Host=elearningdb;Database=SearchServiceDb;Username=postgres;Password=postgres  
+    ports:
+      - "10003:8080"
+    depends_on:
+      - messagebroker
+      - elearningdb
+    restart: always
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:7.9.2
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - 9200:9200
+
+  logstash:
+    container_name: logstash
+    image: logstash:7.9.2
+    command: logstash -f /etc/logstash/conf.d/logstash.conf
+    volumes:
+      - ./Configurations/logstash/pipeline/logstash.conf:/etc/logstash/conf.d/logstash.conf
+    ports:
+      - 5044:5044
+    restart: always
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    container_name: kibana
+    image: kibana:7.9.2
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option csharp_namespace = "CourseManager.API.Protos";
+
+service VideoManagerProtoService {
+	rpc GetVideoInfo (GetVideoInfoRequest) returns (VideoInfo);
+}
+
+message GetVideoInfoRequest {
+	string userId = 1;
+	string videoId = 2;
+}
+
+message VideoInfo {
+	string videoId = 1;
+	string videoName = 2;
+	string videoRawPath = 3;
+	string videoProcessedPath = 4;
+}

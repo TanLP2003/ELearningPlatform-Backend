@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authapi
+  labels:
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authapi
+  template:
+    metadata:
+      labels:
+        app: authapi
+    spec:
+      containers:
+        - name: authapi
+          image: tanlp/authapi
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "200m"
+            limits:
+              memory: "256Mi"
+              cpu: "400m"
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Development
+            - name: ASPNETCORE_HTTP_PORTS
+              value: "8080"
+            - name: ConnectionStrings__Postgres
+              value: "Host=elearningdb;Port=5432;Database=AuthDb;Username=postgres;Password=postgres"
+            - name: Auth__Google__RedirectUri
+              value: "http://elearning.minikube.com:31000" # frontend uri
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authapi
+spec:
+  selector:
+    app: authapi
+  ports:
+    - port: 8080
+      targetPort: 8080

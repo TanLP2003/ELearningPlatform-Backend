@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: e-learning-platform-mq
+spec:
+  selector:
+    matchLabels:
+      app: e-learning-platform-mq
+  template:
+    metadata:
+      labels:
+        app: e-learning-platform-mq
+    spec:
+      hostname: e-learning-platform-mq
+      containers:
+        - name: e-learning-platform-mq
+          image: rabbitmq:management
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              value: guest
+            - name: RABBITMQ_DEFAULT_PASS
+              value: guest
+          ports:
+            - containerPort: 5672
+            - containerPort: 15672
+          volumeMounts:
+            - name: messagebroker-vol
+              mountPath: /var/lib/rabbitmq
+            - name: messagebroker-vol
+              mountPath: /var/log/rabbitmq
+      volumes:
+        - name: messagebroker-vol
+          persistentVolumeClaim:
+            claimName: messagebroker-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: e-learning-platform-mq
+spec:
+  type: NodePort
+  selector:
+    app: e-learning-platform-mq
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+      nodePort: 31672
+    - name: management
+      port: 15672
+      targetPort: 15672
+      nodePort: 32672

@@ -1,0 +1,37 @@
+pipeline {
+    agent any
+    environment {
+        DOCKERHUB_CREDENTIALS=credentials('dockerhub')
+    }
+    stages {
+        stage("Build image"){
+            steps {
+                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+                sh 'docker compose build'
+            }
+        }
+        stage("Push image to registry") {
+            steps {
+                sh 'docker compose push'
+            }
+        }
+        stage("Deploy to Minikube"){
+            steps {
+                sh 'kubectl apply -f Deploy/kubernetes/services/features/'
+                script {
+                    try {
+                        sh 'kubectl rollout restart deployment -l tier=backend'
+                    }catch(err){
+                        echo 'Deployment just created, no need to restart'
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker logout'
+        }
+    }
+}

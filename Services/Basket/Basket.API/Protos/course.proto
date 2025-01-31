@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option csharp_namespace = "Basket.API.Protos";
+
+service CourseManagerProtoService {
+	rpc GetBasicCourseInfo (GetBasicCourseInfoRequest) returns (CourseBasicInfo);
+	rpc GetMultipleBasicCourseInfo (MultipleBasicCourseInfoRequest) returns (MultipleCourseBasicInfoResponse);
+}
+
+message GetBasicCourseInfoRequest {
+	string courseId = 1;
+}
+
+message MultipleBasicCourseInfoRequest {
+	repeated GetBasicCourseInfoRequest requests = 1;
+}
+
+message CourseBasicInfo {
+	string courseId = 1;
+	string courseName = 2;
+	string authorId = 3;
+	string authorName = 4;
+	string courseImage = 5;
+	string price = 6;
+}
+
+message MultipleCourseBasicInfoResponse {
+	repeated CourseBasicInfo courses = 1;
+}

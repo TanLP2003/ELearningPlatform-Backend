@@ -1,0 +1,27 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "course.api": "StartDebugging",
+        "coursemanager.api": "StartDebugging",
+        "videomanager.api": "StartDebugging",
+        "basket.api": "StartDebugging",
+        "ordering.api": "StartDebugging",
+        "identityprovider.api": "StartDebugging",
+        "apigateway": "StartDebugging",
+        "studylist.api": "StartDebugging",
+        "wishlist.api": "StartDebugging",
+        "videolibrary": "StartDebugging",
+        "videolibrary.api": "StartDebugging",
+        "auth.api": "StartDebugging",
+        "userservice.api": "StartDebugging",
+        "resourcemanager.api": "StartDebugging",
+        "searchservice.api": "StartDebugging",
+        "learningservice.api": "StartDebugging",
+        "paymentservice.api": "StartDebugging"
+      }
+    }
+  }
+}

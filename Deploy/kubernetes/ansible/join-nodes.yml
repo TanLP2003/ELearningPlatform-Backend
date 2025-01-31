@@ -1,0 +1,29 @@
+---
+- name: Get variables from Control Plane
+  hosts: control-plane
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Get control-plane server address
+      shell: cat /$HOME/.kube/config | grep server | awk '{print $2}' | sed 's|https://||'
+      register: control_plane_address
+
+    - name: Create cluster token
+      shell: kubeadm token create
+      register: kube_token
+
+    - name: Get CA Hash
+      shell: openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
+      register: kube_hash
+
+- name: Join nodes to cluster
+  hosts: "{{ target_hosts }}"
+  tasks:
+    - name: Set variables
+      set_fact:
+        control_plane_address: "{{hostvars.masternode.control_plane_address.stdout}}"
+        token: "{{hostvars.masternode.kube_token.stdout}}"
+        hash: "{{hostvars.masternode.kube_hash.stdout}}"
+
+    - name: Join node
+      shell: kubeadm join --token "{{ token }}" "{{ control_plane_address}}" --discovery-token-ca-cert-hash sha256:"{{ hash }}"

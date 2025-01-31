@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option csharp_namespace = "PaymentService.API.Protos";
+
+service PaymentServiceProtoGrpc {
+	rpc GeneratePayUrl(PayRequest) returns (PaymentData);
+}
+
+message PayRequest {
+	string payEventId = 1;
+	int32 amount = 2;
+}
+
+message PaymentData {
+	string payUrl = 1;
+}

@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option csharp_namespace = "CourseManager.API.Protos";
+
+service	LearningServiceProtoGrpc {
+	rpc AuthenticateRequestAccessCourse(RequestAccessCourse) returns (AuthenticateRequestAccessResult);
+	rpc GetTotalCourseReviewData(RequestGetTotalCourseReview) returns (TotalCourseReviewResult);
+}
+
+message RequestAccessCourse {
+	string courseId = 1;
+	string userId = 2;
+}
+
+message AuthenticateRequestAccessResult {
+	bool result = 1;
+}
+
+message RequestGetTotalCourseReview {
+	string courseId = 1;
+}
+
+message TotalCourseReviewResult {
+	int32 reviewCount = 1;
+	double average = 2; 
+}

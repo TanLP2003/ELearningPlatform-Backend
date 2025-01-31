@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: learningserviceapi
+  labels:
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: learningserviceapi
+  template:
+    metadata:
+      labels:
+        app: learningserviceapi
+    spec:
+      containers:
+        - name: learningserviceapi
+          image: tanlp/learningserviceapi
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "200m"
+            limits:
+              memory: "256Mi"
+              cpu: "400m"
+          ports:
+            - containerPort: 8080
+            - containerPort: 8082
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Development
+            - name: ASPNETCORE_HTTP_PORTS
+              value: "8080"
+            - name: ConnectionStrings__Postgres
+              value: "Host=elearningdb;Database=LearningServiceDb;Username=postgres;Password=postgres"
+            - name: GrpcSettings__CourseUri
+              value: "http://coursemanagerapi:8082"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: learningserviceapi
+spec:
+  selector:
+    app: learningserviceapi
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+    - name: grpc
+      port: 8082
+      targetPort: 8082

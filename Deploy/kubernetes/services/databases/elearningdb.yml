@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elearningdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elearningdb
+  template:
+    metadata:
+      labels:
+        app: elearningdb
+    spec:
+      containers:
+        - name: elearningdb
+          image: postgres:14.11-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: elearningdb-configmap
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: elearningdb-configmap
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: postgres-elearning
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-elearning
+          persistentVolumeClaim:
+            claimName: elearningdb-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elearningdb
+spec:
+  type: NodePort
+  selector:
+    app: elearningdb
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+      nodePort: 32001

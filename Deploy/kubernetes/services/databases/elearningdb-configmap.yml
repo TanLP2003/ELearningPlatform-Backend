@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elearningdb-configmap
+data:
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres

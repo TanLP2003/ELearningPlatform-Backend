@@ -1,0 +1,22 @@
+---
+- name: Create Control Plane
+  hosts: control-plane
+  become: false
+  tasks:
+    - name: Init control-plane components
+      become: true
+      command: kubeadm init --apiserver-advertise-address="{{ansible_host}}" --pod-network-cidr=10.244.0.0/16
+
+    - name: Export K8S config
+      shell: |
+        mkdir -p $HOME/.kube
+        sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+        sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+    - name: Copy weave-daemonset manifest file
+      copy:
+        src: weave-daemonset-k8s.yaml
+        dest: /home/vagrant/weave-daemonset-k8s.yaml
+
+    - name: Install Pod network add-on
+      shell: kubectl apply -f /home/vagrant/weave-daemonset-k8s.yaml

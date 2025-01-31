@@ -1,0 +1,83 @@
+version: '3.4'
+
+services:
+  elearningdb:
+    image: postgres:14.11-alpine
+
+  minio:
+    image: minio/minio
+
+  coursemanagerapi:
+    image: tanlp/coursemanagerapi
+    build:
+      context: .
+      dockerfile: Services/CourseManager/CourseManager.API/Dockerfile
+  videomanagerapi:
+    image: tanlp/videomanagerapi
+    build:
+      context: .
+      dockerfile: Services/VideoManager/VideoManager.API/Dockerfile
+
+  basketapi:
+    image: tanlp/basketapi
+    build:
+      context: .
+      dockerfile: Services/Basket/Basket.API/Dockerfile
+
+  messagebroker:
+    image: rabbitmq:management
+
+  apigateway:
+    image: tanlp/apigateway
+    build:
+      context: .
+      dockerfile: Services/APIGateway/ApiGateway/Dockerfile
+
+  wishlistapi:
+    image: tanlp/wishlistapi
+    build:
+      context: .
+      dockerfile: Services/WishList/WishList.API/Dockerfile
+
+  videolibraryapi:
+    image: tanlp/videolibraryapi
+    build:
+      context: .
+      dockerfile: Services/VideoLibrary/VideoLibrary.API/Dockerfile
+
+  authapi:
+    image: tanlp/authapi
+    build:
+      context: .
+      dockerfile: Services/Auth/Auth.API/Dockerfile
+
+  userserviceapi:
+    image: tanlp/userserviceapi
+    build:
+      context: .
+      dockerfile: Services/UserService/UserService.API/Dockerfile
+
+  searchserviceapi:
+    image: tanlp/searchserviceapi
+    build:
+      context: .
+      dockerfile: Services/SearchService/SearchService.API/Dockerfile
+
+  learningserviceapi:
+    image: tanlp/learningserviceapi
+    build:
+      context: .
+      dockerfile: Services/LearningService/LearningService.API/Dockerfile
+
+  paymentserviceapi:
+    image: tanlp/paymentserviceapi
+    build:
+      context: .
+      dockerfile: Services/PaymentService/PaymentService.API/Dockerfile
+
+volumes:
+  postgres_elearning:
+  local_storage:
+  messagebroker_vol:
+  minio_data:
+

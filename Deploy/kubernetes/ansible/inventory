@@ -1,0 +1,19 @@
+all:
+  hosts:
+    masternode:
+      ansible_host: 192.168.30.2
+      ansible_user: vagrant
+      ansible_ssh_private_key_file: ~/.ssh/id_rsa
+
+    workernode1:
+      ansible_host: 192.168.30.3
+      ansible_user: vagrant
+      ansible_ssh_private_key_file: ~/.ssh/id_rsa
+
+  children:
+    control-plane:
+      hosts:
+        masternode:
+    nodes:
+      hosts:
+        workernode1:

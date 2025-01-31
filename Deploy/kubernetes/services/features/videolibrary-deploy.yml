@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: videolibraryapi
+  labels:
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: videolibraryapi
+  template:
+    metadata:
+      labels:
+        app: videolibraryapi
+    spec:
+      containers:
+        - name: videolibraryapi
+          image: tanlp/videolibraryapi
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "200m"
+            limits:
+              memory: "256Mi"
+              cpu: "400m"
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Development
+            - name: ASPNETCORE_HTTP_PORTS
+              value: "8080"
+            - name: ConnectionStrings__Postgres
+              value: "Host=elearningdb;Database=VideoLibraryDb;Username=postgres;Password=postgres"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: videolibraryapi
+spec:
+  selector:
+    app: videolibraryapi
+  ports:
+    - port: 8080
+      targetPort: 8080
